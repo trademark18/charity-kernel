@@ -13,6 +13,8 @@ org	0x100
 section	.text
 
 start:
+	mov word [saved_sp], t2stack
+	
 	mov ax, t1stack
 	jmp .start_thread ; Start thread 1
 	mov ax, t2stack
@@ -58,7 +60,7 @@ start:
 		push di
 		push bp
 		
-		mov ax, [saved_sp]
+		mov ax, [saved_sp] ; Problem here
 		mov [saved_sp], sp
 		mov sp, ax
 		
