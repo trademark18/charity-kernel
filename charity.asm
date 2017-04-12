@@ -14,12 +14,23 @@ org	0x100
 section	.text
 
 start:
-	mov cx, t1stack ; Debug
-	mov dx, t2stack ; Debug
-	mov word [saved_sp], t2stack
+	mov ax, t1stack ; tell start_thread where the stack starts
+	mov bx, .t1 ; Tell it where the thread's code starts
+	jmp .start_thread 
+	 ; TODO: we need to make start_thread return here
+	 
+	mov ax, t2stack
+	mov bx, .t2
+	jmp .start_thread
+	
+	;jmp yield.second_half ; Then somehow jump into t1
+	jmp .t1
+	
+	;mov dx, t2stack ; Debug
+	;mov word [saved_sp], t2stack
 	
 	;mov ax, t1stack
-	jmp .start_threads ; Start thread 1
+	;jmp start_thread ; Start thread 1
 	
 	
 	.t1:
@@ -37,23 +48,31 @@ start:
 	
 	
 	
-	.start_threads: ; Takes top of target stack in ax
+	.start_thread: ; Takes top of target stack in ax
 		; Load up S1's saved state starting at the beginning of t1stack
-		mov ax, t1stack ; Move stack pointer to top of S1 stack (256 bytes)
+		;mov ax, t1stack ; Move stack pointer to top of S1 stack (256 bytes)
+		
 		add ax, 0x100 ; Go to the top of the stack
 		mov sp, ax
 		
-		; Push t1stack
-		push .t1
+		; Push data (stack) location
+		push bx
 		; Push registers
 		
-		xor ax, ax ; -------
-		xor bx, bx ;
-		xor cx, cx ;
-		xor dx, dx ;  Stick zeros in the saved registers
-		xor si, si ;
-		xor di, di ;
-		xor bp, bp ; -------
+		;xor ax, ax ; -------
+		mov ax, 0x1
+		mov bx, 0x2
+		mov cx, 0x3
+		mov dx, 0x4
+		mov si, 0x5
+		mov di, 0x6
+		mov bp, 0x7
+		;xor bx, bx ;
+		;xor cx, cx ;
+		;xor dx, dx ;  Stick zeros in the saved registers
+		;xor si, si ;
+		;xor di, di ;
+		;xor bp, bp ; -------
 		
 		push ax
 		push bx
@@ -62,6 +81,9 @@ start:
 		push si
 		push di
 		push bp
+		
+		mov word [saved_sp], sp
+		;ret
 		
 		jmp yield.second_half
 	
@@ -75,11 +97,11 @@ yield:
 	push di
 	push bp
 	
-	.second_half:
-	mov ax, [saved_sp] ; Problem here
+	mov ax, [saved_sp]
 	mov [saved_sp], sp
 	mov sp, ax
 	
+	.second_half:
 	pop bp
 	pop di
 	pop si
