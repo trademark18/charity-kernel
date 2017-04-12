@@ -10,69 +10,74 @@ bits 16
 ;  COM files at offset 0x100 in memory)
 org	0x100
 
+IVT8_OFFSET_SLOT	equ	4 * 8		
+IVT8_SEGMENT_SLOT	equ	IVT8_OFFSET_SLOT + 2
+
 section	.text
 
 start:
-	mov word [saved_sp], t2stack
+	mov sp, t1stack	+ 256
+	;pushf
+	;push cs
+	push t1
+	pusha
+	mov	[sp_1], sp
+
+    mov sp, t2stack	+ 256
+	;pushf
+	;push cs
+	push t2
+	pusha
+	mov	[sp_2], sp
 	
-	mov ax, t1stack
-	jmp .start_thread ; Start thread 1
-	mov ax, t2stack
-	jmp .start_thread ; Start thread 2
+
+	jmp	t1
 	
 	
-	.t1:
+t1:
 		mov dx, t1msg
 		call puts
-		call .yield
-		jmp .t1
+		jmp yield
+		jmp t1
+		
 	
 	
-	.t2:
+t2:
 		mov dx, t2msg
 		call puts
-		call .yield
-		jmp .t2
-	
-	
-	
-	.start_thread: ; Takes top of target stack in ax
-		; Load up S1's saved state starting at the beginning of t1stack
-		add ax, 256
-		mov sp, ax ; Move stack pointer to top of S1 stack (256 bytes)
-		xor ax, ax ; -------
-		xor bx, bx ;
-		xor cx, cx ;
-		xor dx, dx ;  Stick zeros in the saved registers
-		xor si, si ;
-		xor di, di ;
-		xor bp, bp ; -------
+		jmp yield
+		jmp t2
 		
-		jmp .t1
+	
+	
 	
 	; This is copied straight off the board from class 
-	.yield:
-		push ax
-		push bx
-		push cx
-		push dx
-		push si
-		push di
-		push bp
-		
-		mov ax, [saved_sp] ; Problem here
-		mov [saved_sp], sp
-		mov sp, ax
-		
-		pop bp
-		pop di
-		pop si
-		pop dx
-		pop cx
-		pop bx
-		pop ax
-	ret
-		
+yield:
+		pushf
+		push cs
+		cmp word[stack_num],1
+		je 	.switch_1
+		cmp word[stack_num],2
+		je .switch_2	
+
+.switch_1:
+	push t1
+	pusha
+	mov [sp_1], sp
+	mov sp, [sp_2]
+	inc word[stack_num]
+	popa
+	jmp t1
+.switch_2:
+	push t2
+	pusha
+	mov [sp_2], sp
+	mov sp, [sp_1]
+	mov word[stack_num], 1
+	popa
+	jmp t2
+
+
 	; print NUL-terminated string from DS:DX to screen using BIOS (INT 10h)
 	; takes NUL-terminated string pointed to by DS:DX
 	; clobbers nothing
@@ -101,10 +106,18 @@ puts:
 
 
 section	.data
-	t1stack	times	256	dd	0 ; Stack for thread 1
-	t2stack	times	256	dd	0 ; Stack for thread 2
+	t1stack	times	256	dw	0 ; Stack for thread 1
+	t2stack	times	256	dw	0 ; Stack for thread 2
+
+	sp_1	dd 0
+	sp_2	dd 0
+
+	stack_num	dd 	1
 	
 	saved_sp	dd	0 		  ; Saved stack pointer
 	
 	t1msg		db	"This is thread 1", 10, 0
 	t2msg		db	"This is thread 2", 10, 0
+
+	ivt8_offset	dd	0
+	ivt8_segment	dd	0
