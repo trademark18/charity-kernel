@@ -13,12 +13,12 @@ org	0x100
 section	.text
 
 start:
+	mov cx, t1stack
+	mov dx, t2stack
 	mov word [saved_sp], t2stack
 	
-	mov ax, t1stack
-	jmp .start_thread ; Start thread 1
-	mov ax, t2stack
-	jmp .start_thread ; Start thread 2
+	;mov ax, t1stack
+	jmp .start_threads ; Start thread 1
 	
 	
 	.t1:
@@ -36,10 +36,12 @@ start:
 	
 	
 	
-	.start_thread: ; Takes top of target stack in ax
+	.start_threads: ; Takes top of target stack in ax
 		; Load up S1's saved state starting at the beginning of t1stack
-		add ax, 256
-		mov sp, ax ; Move stack pointer to top of S1 stack (256 bytes)
+		mov ax, t1stack ; Move stack pointer to top of S1 stack (256 bytes)
+		sub ax, 0x100
+		mov sp, ax
+		
 		xor ax, ax ; -------
 		xor bx, bx ;
 		xor cx, cx ;
@@ -48,6 +50,7 @@ start:
 		xor di, di ;
 		xor bp, bp ; -------
 		
+		mov word [saved_sp], t2stack
 		jmp .t1
 	
 	; This is copied straight off the board from class 
@@ -71,7 +74,10 @@ start:
 		pop cx
 		pop bx
 		pop ax
-	ret
+		
+		jmp .t1
+		jmp .t2
+		
 		
 	; print NUL-terminated string from DS:DX to screen using BIOS (INT 10h)
 	; takes NUL-terminated string pointed to by DS:DX
