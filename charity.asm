@@ -2,6 +2,7 @@
 ; Members: Reed, Santana, Yurkin
 ;---------------------------------------------------
 ; Alpha version program.  Details here: https://protect.bju.edu/cps/courses/cps230/project/project/
+; GitHub Repository: https://github.com/trademark18/charity-kernel/blob/master/charity.asm
 ;---------------------------------------------------
 bits 16
 
@@ -13,8 +14,8 @@ org	0x100
 section	.text
 
 start:
-	mov cx, t1stack
-	mov dx, t2stack
+	mov cx, t1stack ; Debug
+	mov dx, t2stack ; Debug
 	mov word [saved_sp], t2stack
 	
 	;mov ax, t1stack
@@ -24,14 +25,14 @@ start:
 	.t1:
 		mov dx, t1msg
 		call puts
-		call .yield
+		call yield
 		jmp .t1
 	
 	
 	.t2:
 		mov dx, t2msg
 		call puts
-		call .yield
+		call yield
 		jmp .t2
 	
 	
@@ -39,8 +40,12 @@ start:
 	.start_threads: ; Takes top of target stack in ax
 		; Load up S1's saved state starting at the beginning of t1stack
 		mov ax, t1stack ; Move stack pointer to top of S1 stack (256 bytes)
-		sub ax, 0x100
+		add ax, 0x100 ; Go to the top of the stack
 		mov sp, ax
+		
+		; Push t1stack
+		push .t1
+		; Push registers
 		
 		xor ax, ax ; -------
 		xor bx, bx ;
@@ -50,11 +55,6 @@ start:
 		xor di, di ;
 		xor bp, bp ; -------
 		
-		mov word [saved_sp], t2stack
-		jmp .t1
-	
-	; This is copied straight off the board from class 
-	.yield:
 		push ax
 		push bx
 		push cx
@@ -63,20 +63,32 @@ start:
 		push di
 		push bp
 		
-		mov ax, [saved_sp] ; Problem here
-		mov [saved_sp], sp
-		mov sp, ax
-		
-		pop bp
-		pop di
-		pop si
-		pop dx
-		pop cx
-		pop bx
-		pop ax
-		
-		jmp .t1
-		jmp .t2
+		jmp yield.second_half
+	
+	; This is copied straight off the board from class 
+yield:
+	push ax
+	push bx
+	push cx
+	push dx
+	push si
+	push di
+	push bp
+	
+	.second_half:
+	mov ax, [saved_sp] ; Problem here
+	mov [saved_sp], sp
+	mov sp, ax
+	
+	pop bp
+	pop di
+	pop si
+	pop dx
+	pop cx
+	pop bx
+	pop ax
+	
+	ret
 		
 		
 	; print NUL-terminated string from DS:DX to screen using BIOS (INT 10h)
