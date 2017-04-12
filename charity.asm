@@ -11,9 +11,30 @@ bits 16
 ;  COM files at offset 0x100 in memory)
 org	0x100
 
+IVT8_OFFSET_SLOT	equ	4 * 8		
+IVT8_SEGMENT_SLOT	equ	IVT8_OFFSET_SLOT + 2
+
 section	.text
 
 start:
+<<<<<<< HEAD
+	mov sp, t1stack	+ 256
+	;pushf
+	;push cs
+	push t1
+	pusha
+	mov	[sp_1], sp
+
+    mov sp, t2stack	+ 256
+	;pushf
+	;push cs
+	push t2
+	pusha
+	mov	[sp_2], sp
+	
+
+	jmp	t1
+=======
 	mov ax, t1stack ; tell start_thread where the stack starts
 	mov bx, .t1 ; Tell it where the thread's code starts
 	jmp .start_thread 
@@ -31,18 +52,60 @@ start:
 	
 	;mov ax, t1stack
 	;jmp start_thread ; Start thread 1
+>>>>>>> refs/remotes/trademark18/master
 	
 	
-	.t1:
+t1:
 		mov dx, t1msg
 		call puts
+<<<<<<< HEAD
+		jmp yield
+		jmp t1
+		
+=======
 		call yield
 		jmp .t1
+>>>>>>> refs/remotes/trademark18/master
 	
 	
-	.t2:
+t2:
 		mov dx, t2msg
 		call puts
+<<<<<<< HEAD
+		jmp yield
+		jmp t2
+		
+	
+	
+	
+	; This is copied straight off the board from class 
+yield:
+		pushf
+		push cs
+		cmp word[stack_num],1
+		je 	.switch_1
+		cmp word[stack_num],2
+		je .switch_2	
+
+.switch_1:
+	push t1
+	pusha
+	mov [sp_1], sp
+	mov sp, [sp_2]
+	inc word[stack_num]
+	popa
+	jmp t1
+.switch_2:
+	push t2
+	pusha
+	mov [sp_2], sp
+	mov sp, [sp_1]
+	mov word[stack_num], 1
+	popa
+	jmp t2
+
+
+=======
 		call yield
 		jmp .t2
 	
@@ -113,6 +176,7 @@ yield:
 	ret
 		
 		
+>>>>>>> refs/remotes/trademark18/master
 	; print NUL-terminated string from DS:DX to screen using BIOS (INT 10h)
 	; takes NUL-terminated string pointed to by DS:DX
 	; clobbers nothing
@@ -141,10 +205,18 @@ puts:
 
 
 section	.data
-	t1stack	times	256	dd	0 ; Stack for thread 1
-	t2stack	times	256	dd	0 ; Stack for thread 2
+	t1stack	times	256	dw	0 ; Stack for thread 1
+	t2stack	times	256	dw	0 ; Stack for thread 2
+
+	sp_1	dd 0
+	sp_2	dd 0
+
+	stack_num	dd 	1
 	
 	saved_sp	dd	0 		  ; Saved stack pointer
 	
 	t1msg		db	"This is thread 1", 10, 0
 	t2msg		db	"This is thread 2", 10, 0
+
+	ivt8_offset	dd	0
+	ivt8_segment	dd	0
