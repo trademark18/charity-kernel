@@ -146,7 +146,7 @@ section	.data
 
 	stack_num	dd 	1
 	
-	saved_sp	dd	0 		  ; Saved stack pointer
+	;saved_sp	dd	0 		  ; Saved stack pointer
 	
 	t1msg		db	"This is thread 1", 13, 10, 0
 	t2msg		db	"This is thread 2", 13, 10, 0
