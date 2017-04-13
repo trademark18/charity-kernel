@@ -53,15 +53,15 @@ t2:
 	
 	; This is copied straight off the board from class 
 yield:
-		pushf
-		push cs
+		;pushf
+		;push cs
 		cmp word[stack_num],1
 		je 	.switch_1
 		cmp word[stack_num],2
-		je .switch_2	
+		je .switch_2
 
 .switch_1:
-	push t1
+	;push t1
 	pusha
 	mov [sp_1], sp
 	mov sp, [sp_2]
@@ -69,7 +69,7 @@ yield:
 	popa
 	jmp t1
 .switch_2:
-	push t2
+	;push t2
 	pusha
 	mov [sp_2], sp
 	mov sp, [sp_1]
@@ -116,8 +116,8 @@ section	.data
 	
 	saved_sp	dd	0 		  ; Saved stack pointer
 	
-	t1msg		db	"This is thread 1", 10, 0
-	t2msg		db	"This is thread 2", 10, 0
+	t1msg		db	"This is thread 1", 13, 10, 0
+	t2msg		db	"This is thread 2", 13, 10, 0
 
 	ivt8_offset	dd	0
 	ivt8_segment	dd	0
