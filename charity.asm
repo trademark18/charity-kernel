@@ -10,58 +10,38 @@ bits 16
 ;  COM files at offset 0x100 in memory)
 org	0x100
 
-IVT8_OFFSET_SLOT	equ	4 * 8		
-IVT8_SEGMENT_SLOT	equ	IVT8_OFFSET_SLOT + 2
-
 section	.text
 
 start:
 	mov sp, t1stack	+ 256
-	;pushf
-	;push cs
 	push t1
 	pusha
 	mov	[sp_1], sp
 
     mov sp, t2stack	+ 256
-	;pushf
-	;push cs
 	push t2
 	pusha
 	mov	[sp_2], sp
-	
 
 	jmp	t1
-	
-	
 t1:
-		mov dx, t1msg
-		call puts
-		jmp yield
-		jmp t1
-		
-	
-	
+	mov dx, t1msg
+	call puts
+	jmp yield
+	jmp t1
 t2:
-		mov dx, t2msg
-		call puts
-		jmp yield
-		jmp t2
+	mov dx, t2msg
+	call puts
+	jmp yield
+	jmp t2
 		
-	
-	
-	
-	; This is copied straight off the board from class 
 yield:
-		;pushf
-		;push cs
 		cmp word[stack_num],1
 		je 	.switch_1
 		cmp word[stack_num],2
 		je .switch_2
 
 .switch_1:
-	;push t1
 	pusha
 	mov [sp_1], sp
 	mov sp, [sp_2]
@@ -69,7 +49,6 @@ yield:
 	popa
 	jmp t1
 .switch_2:
-	;push t2
 	pusha
 	mov [sp_2], sp
 	mov sp, [sp_1]
@@ -118,6 +97,3 @@ section	.data
 	
 	t1msg		db	"This is thread 1", 13, 10, 0
 	t2msg		db	"This is thread 2", 13, 10, 0
-
-	ivt8_offset	dd	0
-	ivt8_segment	dd	0
