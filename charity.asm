@@ -2,7 +2,6 @@
 ; Members: Reed, Santana, Yurkin
 ;---------------------------------------------------
 ; Alpha version program.  Details here: https://protect.bju.edu/cps/courses/cps230/project/project/
-; GitHub Repository: https://github.com/trademark18/charity-kernel/blob/master/charity.asm
 ;---------------------------------------------------
 bits 16
 
@@ -17,166 +16,96 @@ IVT8_SEGMENT_SLOT	equ	IVT8_OFFSET_SLOT + 2
 section	.text
 
 start:
-<<<<<<< HEAD
 	mov sp, t1stack	+ 256
-	;pushf
-	;push cs
 	push t1
 	pusha
 	mov	[sp_1], sp
 
     mov sp, t2stack	+ 256
-	;pushf
-	;push cs
 	push t2
 	pusha
 	mov	[sp_2], sp
-	
+
+	mov sp, t3stack	+ 256
+	push t3
+	pusha
+	mov	[sp_3], sp
+
+	mov sp, t4stack	+ 256
+	push t4
+	pusha
+	mov	[sp_4], sp
 
 	jmp	t1
-=======
-	mov ax, t1stack ; tell start_thread where the stack starts
-	mov bx, .t1 ; Tell it where the thread's code starts
-	jmp .start_thread 
-	 ; TODO: we need to make start_thread return here
-	 
-	mov ax, t2stack
-	mov bx, .t2
-	jmp .start_thread
-	
-	;jmp yield.second_half ; Then somehow jump into t1
-	jmp .t1
-	
-	;mov dx, t2stack ; Debug
-	;mov word [saved_sp], t2stack
-	
-	;mov ax, t1stack
-	;jmp start_thread ; Start thread 1
->>>>>>> refs/remotes/trademark18/master
 	
 	
 t1:
 		mov dx, t1msg
 		call puts
-<<<<<<< HEAD
 		jmp yield
 		jmp t1
 		
-=======
-		call yield
-		jmp .t1
->>>>>>> refs/remotes/trademark18/master
-	
-	
 t2:
 		mov dx, t2msg
 		call puts
-<<<<<<< HEAD
 		jmp yield
 		jmp t2
+
+t3:
+		mov dx, t3msg
+		call puts
+		jmp yield
+		jmp t3
+t4:
+		mov dx, t4msg
+		call puts
+		jmp yield
+		jmp t4
 		
-	
-	
-	
-	; This is copied straight off the board from class 
 yield:
-		pushf
-		push cs
 		cmp word[stack_num],1
 		je 	.switch_1
 		cmp word[stack_num],2
-		je .switch_2	
+		je .switch_2
+		cmp word[stack_num],3
+		je .switch_3
+		cmp word[stack_num],4
+		je .switch_4
+		
 
 .switch_1:
-	push t1
 	pusha
 	mov [sp_1], sp
 	mov sp, [sp_2]
 	inc word[stack_num]
 	popa
 	jmp t1
+	
 .switch_2:
-	push t2
 	pusha
 	mov [sp_2], sp
-	mov sp, [sp_1]
-	mov word[stack_num], 1
+	mov sp, [sp_3]
+	inc word[stack_num]
 	popa
 	jmp t2
 
+.switch_3:
+	pusha
+	mov [sp_3], sp
+	mov sp, [sp_4]
+	inc word[stack_num]
+	popa
+	jmp t3
 
-=======
-		call yield
-		jmp .t2
-	
-	
-	
-	.start_thread: ; Takes top of target stack in ax
-		; Load up S1's saved state starting at the beginning of t1stack
-		;mov ax, t1stack ; Move stack pointer to top of S1 stack (256 bytes)
-		
-		add ax, 0x100 ; Go to the top of the stack
-		mov sp, ax
-		
-		; Push data (stack) location
-		push bx
-		; Push registers
-		
-		;xor ax, ax ; -------
-		mov ax, 0x1
-		mov bx, 0x2
-		mov cx, 0x3
-		mov dx, 0x4
-		mov si, 0x5
-		mov di, 0x6
-		mov bp, 0x7
-		;xor bx, bx ;
-		;xor cx, cx ;
-		;xor dx, dx ;  Stick zeros in the saved registers
-		;xor si, si ;
-		;xor di, di ;
-		;xor bp, bp ; -------
-		
-		push ax
-		push bx
-		push cx
-		push dx
-		push si
-		push di
-		push bp
-		
-		mov word [saved_sp], sp
-		;ret
-		
-		jmp yield.second_half
-	
-	; This is copied straight off the board from class 
-yield:
-	push ax
-	push bx
-	push cx
-	push dx
-	push si
-	push di
-	push bp
-	
-	mov ax, [saved_sp]
-	mov [saved_sp], sp
-	mov sp, ax
-	
-	.second_half:
-	pop bp
-	pop di
-	pop si
-	pop dx
-	pop cx
-	pop bx
-	pop ax
-	
-	ret
-		
-		
->>>>>>> refs/remotes/trademark18/master
+.switch_4:
+	pusha
+	mov [sp_4], sp
+	mov sp, [sp_1]
+	mov word[stack_num], 1
+	popa
+	jmp t4
+
+
 	; print NUL-terminated string from DS:DX to screen using BIOS (INT 10h)
 	; takes NUL-terminated string pointed to by DS:DX
 	; clobbers nothing
@@ -207,16 +136,19 @@ puts:
 section	.data
 	t1stack	times	256	dw	0 ; Stack for thread 1
 	t2stack	times	256	dw	0 ; Stack for thread 2
+	t3stack	times	256	dw	0 ; Stack for thread 2
+	t4stack	times	256	dw	0 ; Stack for thread 2
 
 	sp_1	dd 0
 	sp_2	dd 0
+	sp_3	dd 0
+	sp_4	dd 0
 
 	stack_num	dd 	1
 	
 	saved_sp	dd	0 		  ; Saved stack pointer
 	
-	t1msg		db	"This is thread 1", 10, 0
-	t2msg		db	"This is thread 2", 10, 0
-
-	ivt8_offset	dd	0
-	ivt8_segment	dd	0
+	t1msg		db	"This is thread 1", 13, 10, 0
+	t2msg		db	"This is thread 2", 13, 10, 0
+	t3msg		db	"This is thread 3", 13, 10, 0
+	t4msg		db	"This is thread 4", 13, 10, 0
