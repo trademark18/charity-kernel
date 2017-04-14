@@ -1,21 +1,21 @@
-; CpS 230 Team Project Alpha: Team Charity (the greatest of these)
-; Members: Reed, Santana, Yurkin
+; CpS 230 Lab 9: Stephen Yurkin (syurk738)
 ;---------------------------------------------------
-; Alpha version program.  Details here: https://protect.bju.edu/cps/courses/cps230/project/project/
+; Tiny payload program to boot-strapped from disk.
 ;---------------------------------------------------
 bits 16
 
-; NECESSARY when creating "COM" files (simple DOS executables).
-; (tells NASM take into account the fact that DOS loads
-;  COM files at offset 0x100 in memory)
-org	0x100
+; The bootloader loads us at 0800:0000h, so our "origin" is offset 0
+org	0
 
-IVT8_OFFSET_SLOT	equ	4 * 8		
-IVT8_SEGMENT_SLOT	equ	IVT8_OFFSET_SLOT + 2
-
+; Single section file (any data will sit in our code section)
 section	.text
 
+; Offset 0 into our code (starting point)
 start:
+	; Make sure DS == CS (assume SS is already set up/OK)
+	mov	ax, cs
+	mov	ds, ax
+	
 	mov sp, t1stack	+ 256
 	push t1
 	pusha
@@ -42,24 +42,24 @@ start:
 t1:
 		mov dx, t1msg
 		call puts
-		jmp yield
+		call yield
 		jmp t1
 		
 t2:
 		mov dx, t2msg
 		call puts
-		jmp yield
+		call yield
 		jmp t2
 
 t3:
 		mov dx, t3msg
 		call puts
-		jmp yield
+		call yield
 		jmp t3
 t4:
 		mov dx, t4msg
 		call puts
-		jmp yield
+		call yield
 		jmp t4
 		
 yield:
@@ -79,7 +79,7 @@ yield:
 	mov sp, [sp_2]
 	inc word[stack_num]
 	popa
-	jmp t1
+	ret
 	
 .switch_2:
 	pusha
@@ -87,7 +87,7 @@ yield:
 	mov sp, [sp_3]
 	inc word[stack_num]
 	popa
-	jmp t2
+	ret
 
 .switch_3:
 	pusha
@@ -95,7 +95,7 @@ yield:
 	mov sp, [sp_4]
 	inc word[stack_num]
 	popa
-	jmp t3
+	ret
 
 .switch_4:
 	pusha
@@ -103,13 +103,12 @@ yield:
 	mov sp, [sp_1]
 	mov word[stack_num], 1
 	popa
-	jmp t4
+	ret
 
-
-	; print NUL-terminated string from DS:DX to screen using BIOS (INT 10h)
-	; takes NUL-terminated string pointed to by DS:DX
-	; clobbers nothing
-	; returns nothing
+; print NUL-terminated string from DS:DX to screen using BIOS (INT 10h)
+; takes NUL-terminated string pointed to by DS:DX
+; clobbers nothing
+; returns nothing
 puts:
 	push	ax
 	push	cx
@@ -131,9 +130,12 @@ puts:
 	pop	ax
 	ret
 
+section .data
+	t1msg		db	"This is thread 1", 13, 10, 0
+	t2msg		db	"This is thread 2", 13, 10, 0
+	t3msg		db	"This is thread 3", 13, 10, 0
+	t4msg		db	"This is thread 4", 13, 10, 0
 
-
-section	.data
 	t1stack	times	256	dw	0 ; Stack for thread 1
 	t2stack	times	256	dw	0 ; Stack for thread 2
 	t3stack	times	256	dw	0 ; Stack for thread 2
@@ -145,10 +147,3 @@ section	.data
 	sp_4	dd 0
 
 	stack_num	dd 	1
-	
-	;saved_sp	dd	0 		  ; Saved stack pointer
-	
-	t1msg		db	"This is thread 1", 13, 10, 0
-	t2msg		db	"This is thread 2", 13, 10, 0
-	t3msg		db	"This is thread 3", 13, 10, 0
-	t4msg		db	"This is thread 4", 13, 10, 0
